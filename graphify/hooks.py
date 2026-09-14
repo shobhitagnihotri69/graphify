@@ -195,7 +195,11 @@ try:
                 # Python 3.13 no longer raises on a symlink loop (resolve returns
                 # the path unresolved), so require a real directory: a loop or a
                 # dangling target is not a dir and correctly falls back.
-                _in_repo = (_resolved == _cwd or _cwd in _resolved.parents) and _resolved.is_dir()
+                _in_repo = (
+                    _resolved == _cwd
+                    or _cwd in _resolved.parents
+                    or _resolved in _cwd.parents
+                ) and _resolved.is_dir()
             except (OSError, RuntimeError):
                 _in_repo = False
             if _in_repo:
@@ -270,7 +274,11 @@ try:
                 # Python 3.13 no longer raises on a symlink loop (resolve returns
                 # the path unresolved), so require a real directory: a loop or a
                 # dangling target is not a dir and correctly falls back.
-                _in_repo = (_resolved == _cwd or _cwd in _resolved.parents) and _resolved.is_dir()
+                _in_repo = (
+                    _resolved == _cwd
+                    or _cwd in _resolved.parents
+                    or _resolved in _cwd.parents
+                ) and _resolved.is_dir()
             except (OSError, RuntimeError):
                 _in_repo = False
             if _in_repo:

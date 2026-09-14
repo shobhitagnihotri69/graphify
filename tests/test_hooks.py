@@ -384,6 +384,24 @@ def test_rebuild_bodies_honour_an_in_repo_graphify_root(name, body, tmp_path, mo
     assert ns["_root"].resolve() == (repo / "backend").resolve(), f"{name} lost the scoped root"
 
 
+@pytest.mark.parametrize(
+    "name,body",
+    [("post-commit", _REBUILD_BODY_COMMIT), ("post-checkout", _REBUILD_BODY_CHECKOUT)],
+)
+def test_rebuild_bodies_honour_root_when_cwd_is_in_subdirectory(name, body, tmp_path, monkeypatch):
+    """Committing or checking out from inside a repository subdirectory
+    must still adopt the repository root recorded in .graphify_root."""
+    repo = tmp_path / "repo"
+    sub = repo / "src" / "sub"
+    (sub / "graphify-out").mkdir(parents=True)
+    (sub / "graphify-out" / ".graphify_root").write_text(str(repo), encoding="utf-8")
+    monkeypatch.chdir(sub)
+    ns = {"Path": Path, "os": os}
+    exec(compile(_extract_root_resolution(body), "<rebuild_body>", "exec"), ns)
+    assert ns["_root"].resolve() == repo.resolve(), f"{name} rejected repo root when cwd is a subfolder"
+
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="symlink setup differs on Windows")
 @pytest.mark.parametrize(
     "name,body",
