@@ -1366,6 +1366,7 @@ def _rebuild_code(
 
     Returns True on success, False on error or skipped-due-to-lock.
     """
+    os.environ.setdefault("PYTHONHASHSEED", "0")
     if not _stabilize_rebuild_cwd(watch_path):
         return False
 

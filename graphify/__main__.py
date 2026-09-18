@@ -748,7 +748,37 @@ def _run_cli() -> None:
 
     if dispatch_install_cli(cmd):
         return
+    _pin_pythonhashseed(cmd)
     dispatch_command(cmd)
+
+
+def _pin_pythonhashseed(cmd: str) -> None:
+    """Ensure deterministic community clustering across CLI runs (#3641).
+
+    Louvain community assignments depend on set/dict iteration order, which
+    CPython randomizes per-process via PYTHONHASHSEED unless explicitly pinned.
+    Git hooks export PYTHONHASHSEED=0; ensure update, extract, and cluster-only
+    do the same so CLI and hook runs produce identical clustering.
+    """
+    if cmd not in {"update", "extract", "cluster-only", "label"}:
+        return
+    if "PYTHONHASHSEED" in os.environ:
+        return
+    os.environ["PYTHONHASHSEED"] = "0"
+    # When running under an active test runner (pytest), do not re-exec the test runner.
+    if "pytest" in sys.modules or "PYTEST_CURRENT_TEST" in os.environ:
+        return
+    try:
+        if sys.argv[0].endswith(".exe"):
+            os.execv(sys.argv[0], sys.argv)
+        elif sys.argv[0].endswith("__main__.py") or sys.argv[0] == "-m":
+            os.execv(sys.executable, [sys.executable, "-m", "graphify", *sys.argv[1:]])
+        elif os.path.isfile(sys.argv[0]):
+            os.execv(sys.executable, [sys.executable, sys.argv[0], *sys.argv[1:]])
+        else:
+            os.execv(sys.executable, [sys.executable, "-m", "graphify", *sys.argv[1:]])
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":
