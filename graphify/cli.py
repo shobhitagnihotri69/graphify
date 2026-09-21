@@ -4085,6 +4085,8 @@ def dispatch_command(cmd: str) -> None:
             print("[graphify extract] introspecting Cargo workspace...")
             try:
                 cargo_result = introspect_cargo(target)
+            except FileNotFoundError:
+                print("[graphify extract] --cargo: no Cargo.toml at scan root, skipping crate edges")
             except (ConnectionError, ImportError, OSError) as exc:
                 print(f"error: {exc}", file=sys.stderr)
                 sys.exit(1)

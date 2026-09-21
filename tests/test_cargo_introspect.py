@@ -455,3 +455,9 @@ tokio_rt = { version = "1", package = "tokio" }
 
     assert {node["id"] for node in result["nodes"]} == {"crate:app"}
     assert result["edges"] == []
+
+
+def test_cargo_introspect_missing_root_manifest_raises_filenotfound(tmp_path):
+    """introspect_cargo raises FileNotFoundError when Cargo.toml is absent at root."""
+    with pytest.raises(FileNotFoundError):
+        introspect_cargo(tmp_path)
